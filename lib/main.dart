@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-Future<Album> fetchAlbum() async {
-  //List<Album> albums = [];
+Future<List<Album>> fetchAlbum() async {
+  List<Album> albums = [];
   final response = await http
-      .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+      .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/'));
 
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
     // then parse the JSON.
-    /*final list = jsonDecode(response.body);
+    final list = jsonDecode(response.body);
     for(var data in list){
       albums.add(Album.fromJson(data));
-      //print(data);
-    }*/
-    return Album.fromJson(jsonDecode(response.body));
+      print(data);
+    }
+    return albums;
+    //return Album.fromJson(jsonDecode(response.body));
   } else {
     // If the server did not return a 200 OK response,
     // then throw an exception.
@@ -55,11 +56,11 @@ class MyApp extends StatefulWidget{
 }
 
 class _State extends State<MyApp>{
-  //List<Album> futureAlbum = [];
-  late Future<Album> futureAlbum;
+  List<Album> futureAlbum = [];
+  //late Future<Album> futureAlbum;
 
   void getData() async{
-    futureAlbum = fetchAlbum();
+    futureAlbum = await fetchAlbum();
   }
 
   @override
@@ -74,24 +75,50 @@ class _State extends State<MyApp>{
     return MaterialApp(
       title: "Fetch data",
       theme: ThemeData(
-        primarySwatch: Colors.deepPurple
+        primarySwatch: Colors.lightBlue
       ),
       home: Scaffold(
         appBar: AppBar(
           title: const Text("Fetch data example"),
         ),
         body: Center(
-          child: FutureBuilder<Album>(
-            future: futureAlbum,
-            builder: (context, snapshot){
-              if(snapshot.hasData){
-                return Text(snapshot.data!.title, style: TextStyle(fontSize: 28),);
-              }
-              else if(snapshot.hasError){
-                return Text('${snapshot.error}');
-              }
-              return const CircularProgressIndicator();
+          child: ListView.separated(
+            padding     : const EdgeInsets.all(10.0),
+            itemCount   : futureAlbum.length,
+
+            itemBuilder : (BuildContext context, int index){
+
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black26,
+                    style: BorderStyle.solid,
+                    width: 1.5,
+                  ),
+                ),
+                margin: EdgeInsets.all(2),
+                child: ListTile(
+                  title:Text('${futureAlbum[index].title}'),
+                  onTap: (){
+                    final snackBar = SnackBar(
+                      content: Text('${futureAlbum[index].title}'),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          // Some code to undo the change.
+                        },
+                      ),
+                    );
+
+                  // Find the ScaffoldMessenger in the widget tree
+                  // and use it to show a SnackBar.
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  },
+                ),
+
+              );
             },
+            separatorBuilder: (BuildContext context, int index) => const Divider(),
           ),
         ),
       ),
